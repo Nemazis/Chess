@@ -32,10 +32,30 @@ def main():
     gs = ChessEngine.GameState()
     loadImages()
     running = True
+    sqSelected = () #Nothing selected to start. Keeps track of the last click. Tuple, so keeps track of (Row and Column)
+    playerClicks = [] #Keeps track of player clicks (two tuples)
+    
     while running:
         for e in p.event.get():
             if e.type == p.QUIT:
                 running = False
+            elif e.type == p.MOUSEBUTTONDOWN:
+                location = p.mouse.get_pos() #(x,y) location of mouse
+                col = location[0] // SQ_SIZE
+                row = location[1] // SQ_SIZE
+                if sqSelected == (row, col):
+                    sqSelected = () #Un-selects piece
+                    playerClicks = [] #Clears selection
+                else:
+                    sqSelected = (row, col)
+                    playerClicks.append(sqSelected)
+                if len(playerClicks) == 2:
+                    move = ChessEngine.move(playerClicks[0], playerClicks[1], gs.board)
+                    print(move.getChessNotation())
+                    gs.makeMove(move)
+                    sqSelected = ()
+                    playerClicks = []
+                    
         drawGameState(screen, gs)
         clock.tick(MAX_FPS)
         p.display.flip()
@@ -67,8 +87,11 @@ Draw the pieces on the board using the current GameState.board
 """
 
 def drawPieces(screen, board):
-    pass
-
+    for r in range(DIMENSION):
+        for c in range(DIMENSION):
+            piece = board[r][c]
+            if piece != "--": #If NOT an empty square
+                screen.blit(IMAGES[piece], p.Rect(c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 if __name__ == "__main__":
     main()
